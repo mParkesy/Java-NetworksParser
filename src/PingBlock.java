@@ -10,10 +10,14 @@ public class PingBlock {
     private double avg;
     private double max;
     private double mdev;
-    private String type;
+    private enum TYPE {
+        LOSS_FREE, MINOR_LOSS, SIGNIFICANT_LOSS, MAJOR_LOSS, FAIL, ERROR
+    }
+    private TYPE type;
    
 
-    public PingBlock(Host host, String timestamp, String packetLoss, double min, double avg, double max, double mdev) {
+    public PingBlock(Host host, String timestamp, String packetLoss, 
+            double min, double avg, double max, double mdev, TYPE type) {
         this.host = host;
         this.timestamp = timestamp;
         this.packetLoss = packetLoss;
@@ -21,6 +25,7 @@ public class PingBlock {
         this.avg = avg;
         this.max = max;
         this.mdev = mdev;
+        this.type = type;
     }
     
     public PingBlock(){
@@ -61,6 +66,10 @@ public class PingBlock {
         return mdev;
     }
 
+    public TYPE getType() {
+        return type;
+    }
+
     public void setHost(Host host) {
         this.host = host;
     }
@@ -70,7 +79,25 @@ public class PingBlock {
     }
 
     public void setPacketLoss(String packetLoss) {
+        packetLoss = packetLoss.replaceAll("\\s+", "");
         this.packetLoss = packetLoss;
+        int loss = 0;
+        if("+1errors".equals(packetLoss)){
+            this.setType(TYPE.ERROR);
+        } else {
+            loss = Integer.parseInt(packetLoss);
+        }
+        if(loss >= 0 && loss <= 5){
+            this.setType(TYPE.LOSS_FREE);
+        } else if(loss > 5 && loss <= 10){
+            this.setType(TYPE.SIGNIFICANT_LOSS);
+        } else if(loss > 10){
+            this.setType(TYPE.MAJOR_LOSS);
+        } else if(loss == 100){
+            this.setType(TYPE.FAIL);
+        }
+            
+        
     }
 
     public void setMin(double min) {
@@ -88,6 +115,9 @@ public class PingBlock {
     public void setMdev(double mdev) {
         this.mdev = mdev;
     }
-    
+
+    public void setType(TYPE type) {
+        this.type = type;
+    } 
     
 }

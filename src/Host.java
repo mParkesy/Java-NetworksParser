@@ -24,4 +24,6 @@ public class Host {
     public String getIP() {
         return IP;
     }   
+    
+    
 }
