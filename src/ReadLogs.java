@@ -5,6 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.ListIterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -17,8 +20,6 @@ import java.util.ArrayList;
  */
 public class ReadLogs {
 
-    
-    
     public static ArrayList<String> getFileList(String file) {
         ArrayList<String> list = new ArrayList<>();
         try {
@@ -134,16 +135,81 @@ public class ReadLogs {
         return blockList;
     }
 
-    public static void main(String[] args) throws IOException {
-        String file = "ping.log";
-
-        ArrayList<Host> hosts = getHostList();
-
-        ArrayList<PingBlock> pingList = getPingList(hosts, file);
-
-        file = "trace.log";
-        ArrayList<String> list = getFileList(file);
+    public static void writeToFile(ArrayList<Wget> list) throws IOException{
+        StringBuilder sb = new StringBuilder();
+        String columns = "Date, Speed, File Size";
+        sb.append(columns);
+        sb.append("\n");
+        FileWriter writer = new FileWriter("wget.csv");
+        writer.append(sb.toString());
         
+        
+        for(Wget w : list){
+            sb = new StringBuilder();
+            sb.append(w.getDate());
+            sb.append(" ");
+            sb.append(w.getTime());
+            sb.append(", ");
+            sb.append(w.getSpeed());
+            sb.append(", ");
+            sb.append(w.getFile());
+            sb.append("\n");
+            writer.append(sb.toString());
+        }
+        writer.close();
+    }
+    
+    public static ArrayList<Wget> doGet(ArrayList<String> list) {
+        ArrayList<Wget> wgetList = new ArrayList<>();
+        Pattern date = Pattern.compile("([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))");
+        Pattern time = Pattern.compile("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])");
+        Pattern speed = Pattern.compile("\\(([^()]+)\\)");
+        Pattern file = Pattern.compile("‘(.*?)\\.");
+        
+        Matcher matcher = null;
+        ListIterator<String> it = list.listIterator();
+
+        while (it.hasNext()) {
+            String a = it.next();
+            if(a.contains("saved")) {
+                Wget get = new Wget();
+                matcher = date.matcher(a);
+                if (matcher.find()) {
+                    get.setDate(matcher.group(1));
+                }
+                matcher = time.matcher(a);
+                if(matcher.find()){
+                    String fullTime = matcher.group(1) + ":" + matcher.group(2) + ":" + matcher.group(3);
+                    get.setTime(fullTime);
+                }
+                matcher = speed.matcher(a);
+                if(matcher.find()){
+                    String fullSpeed = matcher.group(1).replaceAll(" Mb/s", "");
+                    get.setSpeed(fullSpeed);
+                }
+                matcher = file.matcher(a);
+                if(matcher.find()){
+                    String fileType = matcher.group(1);
+                    get.setFile(fileType);
+                }
+                wgetList.add(get);
+            }
+        }
+
+        return wgetList;
+    }
+
+    public static void main(String[] args) throws IOException {
+        //String file = "ping.log";
+
+        //ArrayList<Host> hosts = getHostList();
+        //ArrayList<PingBlock> pingList = getPingList(hosts, file);
+        //file = "trace.log";
+        //ArrayList<String> list = getFileList(file);
+        String file = "ftpTen.log";
+        ArrayList<String> list = getFileList(file);
+        ArrayList<Wget> wgetList = doGet(list);
+        writeToFile(wgetList);
 
     }
 }

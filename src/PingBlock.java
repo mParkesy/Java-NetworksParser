@@ -87,7 +87,9 @@ public class PingBlock {
         } else {
             loss = Integer.parseInt(packetLoss);
         }
-        if(loss >= 0 && loss <= 5){
+        if(loss == 0){
+            this.setType(TYPE.LOSS_FREE);
+        } else if(loss > 0 && loss <= 5){
             this.setType(TYPE.LOSS_FREE);
         } else if(loss > 5 && loss <= 10){
             this.setType(TYPE.SIGNIFICANT_LOSS);
@@ -95,6 +97,8 @@ public class PingBlock {
             this.setType(TYPE.MAJOR_LOSS);
         } else if(loss == 100){
             this.setType(TYPE.FAIL);
+        } else {
+            this.setType(TYPE.ERROR);
         }
             
         
